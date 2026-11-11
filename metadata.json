@@ -1,0 +1,6 @@
+{
+  "name": "여정 (Yeojeong) - 인생샷 & 여행 기록 커뮤니티",
+  "description": "여행자들이 발견한 베스트 포토존, 숨은 명소, 타임라인 여행기를 공유하고 탐색하는 감성 여행 아카이브 플랫폼",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

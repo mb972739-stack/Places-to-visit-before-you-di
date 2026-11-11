@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, MapPin, Lightbulb, Compass, ArrowUpRight } from 'lucide-react';
 import { TravelStory } from '../types';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface HiddenGemSectionProps {
   stories: TravelStory[];
@@ -22,10 +23,12 @@ export const HiddenGemSection: React.FC<HiddenGemSectionProps> = ({
     }))
   );
 
-  const handleCopyTip = (tip: string, id: string) => {
-    navigator.clipboard.writeText(tip);
-    setCopiedIndex(id);
-    setTimeout(() => setCopiedIndex(null), 2000);
+  const handleCopyTip = async (tip: string, id: string) => {
+    const success = await copyToClipboard(tip);
+    if (success) {
+      setCopiedIndex(id);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    }
   };
 
   return (

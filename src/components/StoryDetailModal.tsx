@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Heart, Bookmark, MapPin, Camera, Clock, Sparkles, Share2, MessageSquare, Send, Check } from 'lucide-react';
 import { TravelStory, StoryComment } from '../types';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface StoryDetailModalProps {
   story: TravelStory | null;
@@ -45,10 +46,12 @@ export const StoryDetailModal: React.FC<StoryDetailModalProps> = ({
     setNewComment('');
   };
 
-  const handleShareLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+  const handleShareLink = async () => {
+    const success = await copyToClipboard(window.location.href);
+    if (success) {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
   };
 
   const stampOptions = ['📸 인생샷 인정', '✈️ 이번 주말 각', '🗺️ 지도 저장', '💡 꿀팁 감사'];

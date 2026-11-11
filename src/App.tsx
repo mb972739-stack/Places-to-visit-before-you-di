@@ -362,8 +362,14 @@ export default function App() {
           />
         )}
 
-        {/* Always display Travel Preparation Section for immediate convenience */}
-        <TravelPrepSection />
+        {/* Tab 4: Travel Preparation Guide View or Default Bottom Section */}
+        {activeTab === 'prep' ? (
+          <div className="py-4">
+            <TravelPrepSection />
+          </div>
+        ) : (
+          <TravelPrepSection />
+        )}
 
         {/* Bottom Community Highlight Section */}
         <section className="py-12 bg-slate-900 text-white">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Camera, Sparkles } from 'lucide-react';
+import { X, Camera, Sparkles, AlertCircle } from 'lucide-react';
 import { TravelStory, Region, SpotTheme } from '../types';
 
 interface CreateStoryModalProps {
@@ -28,6 +28,7 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
   const [region, setRegion] = useState<Region>(initialData?.region || '국내');
   const [theme, setTheme] = useState<SpotTheme>(initialData?.theme || '골든아워');
   const [heroImage, setHeroImage] = useState(initialData?.heroImage || PRESET_IMAGES[0].url);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Photo Spot
   const [spotTitle, setSpotTitle] = useState(initialData?.bestPhotoSpot?.title || '');
@@ -48,9 +49,11 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !destination.trim()) {
-      alert('여행기 제목과 여행지를 입력해 주세요.');
+      setErrorMessage('여행기 제목과 여행지 이름을 모두 입력해 주세요.');
       return;
     }
+
+    setErrorMessage('');
 
     const newStory: TravelStory = {
       id: `story-${Date.now()}`,
@@ -75,7 +78,7 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
         location: destination,
         goldenTime: spotGoldenTime,
         cameraAngleTip: spotAngleTip.trim() || '수평선을 안정적으로 맞추고 자연광을 등지지 않게 촬영해 보세요.',
-        poseTip: spotPoseTip.trim() || '먼 풍경을 자연스럽게 바라보는 감성적인 실루엣 샷.',
+        poseTip: spotPoseTip.trim() || '먼 풍경을 자연스럽게 바라보는 감성적인 실루엣 구도.',
         image: heroImage,
       },
       hiddenGems: gemName.trim()
@@ -131,6 +134,13 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-6">
+          {errorMessage && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           {/* Section 1: Basic Info */}
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
@@ -147,7 +157,10 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                   type="text"
                   required
                   value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
+                  onChange={(e) => {
+                    setDestination(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
                   placeholder="예: 제주 구좌읍, 교토 아라시야마, 스위스 그린델발트"
                   className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
@@ -179,7 +192,10 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                 type="text"
                 required
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (errorMessage) setErrorMessage('');
+                }}
                 placeholder="예: 에메랄드빛 바람과 유채꽃 절벽, 제주 동쪽 3박 4일 여정"
                 className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
               />

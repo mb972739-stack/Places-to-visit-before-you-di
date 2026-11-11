@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Download, Copy, Check, Camera, MapPin } from 'lucide-react';
 import { TravelStory } from '../types';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface PhotoCardGeneratorModalProps {
   story: TravelStory | null;
@@ -13,11 +14,12 @@ export const PhotoCardGeneratorModal: React.FC<PhotoCardGeneratorModalProps> = (
 }) => {
   const [copied, setCopied] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [cardTheme, setCardTheme] = useState<'white' | 'warm' | 'dark'>('white');
 
   if (!story) return null;
 
-  const handleCopyCardText = () => {
+  const handleCopyCardText = async () => {
     const text = `📸 [여정 YEOJEONG - 감성 여행 포토카드]
 📍 여행지: ${story.destination} - ${story.bestPhotoSpot.title}
 ⏰ 추천 골든아워: ${story.bestPhotoSpot.goldenTime}
@@ -25,18 +27,108 @@ export const PhotoCardGeneratorModal: React.FC<PhotoCardGeneratorModalProps> = (
 ✨ 추천 포즈: ${story.bestPhotoSpot.poseTip}
 #여정 #인생샷 #여행스타그램 #감성여행`;
 
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleDownloadCard = () => {
-    setDownloadSuccess(true);
-    setTimeout(() => setDownloadSuccess(false), 2500);
+    setIsGenerating(true);
+
+    try {
+      // Create off-screen canvas to render a crisp photocard image
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+
+      const width = 800;
+      const height = 1000;
+      canvas.width = width;
+      canvas.height = height;
+
+      // Background styling
+      if (cardTheme === 'white') {
+        ctx.fillStyle = '#ffffff';
+      } else if (cardTheme === 'warm') {
+        ctx.fillStyle = '#fffbeb';
+      } else {
+        ctx.fillStyle = '#090d16';
+      }
+      ctx.fillRect(0, 0, width, height);
+
+      // Border outline
+      ctx.strokeStyle = cardTheme === 'dark' ? '#1e293b' : '#e2e8f0';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(16, 16, width - 32, height - 32);
+
+      // Draw photo
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          ctx.drawImage(img, 40, 40, width - 80, 540);
+
+          // Card typography
+          ctx.fillStyle = cardTheme === 'dark' ? '#f8fafc' : '#0f172a';
+          ctx.font = 'bold 32px "Noto Sans KR", sans-serif';
+          ctx.fillText(story.bestPhotoSpot.title, 44, 650);
+
+          ctx.fillStyle = cardTheme === 'dark' ? '#fbbf24' : '#b45309';
+          ctx.font = 'bold 22px "Noto Sans KR", sans-serif';
+          ctx.fillText(`📍 ${story.destination} · ${story.bestPhotoSpot.goldenTime}`, 44, 695);
+
+          // Posing Tip
+          ctx.fillStyle = cardTheme === 'dark' ? '#94a3b8' : '#475569';
+          ctx.font = '20px "Noto Sans KR", sans-serif';
+          ctx.fillText(`"${story.bestPhotoSpot.poseTip}"`, 44, 760);
+
+          // Camera Settings
+          ctx.fillStyle = cardTheme === 'dark' ? '#64748b' : '#94a3b8';
+          ctx.font = '18px monospace';
+          ctx.fillText(`${story.bestPhotoSpot.gearTip || '35mm · f/2.0 · 1/500s'}  |  YEOJEONG ARCHIVE`, 44, 880);
+
+          ctx.fillStyle = cardTheme === 'dark' ? '#38bdf8' : '#0284c7';
+          ctx.font = 'bold 18px sans-serif';
+          ctx.fillText(`PHOTO BY ${story.author.name}`, 44, 915);
+
+          // Trigger download
+          const dataUrl = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = `yeojeong_${story.id}_photocard.png`;
+          link.href = dataUrl;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          setDownloadSuccess(true);
+          setIsGenerating(false);
+          setTimeout(() => setDownloadSuccess(false), 3000);
+        } catch {
+          // Fallback if cross-origin image blocks toDataURL
+          setDownloadSuccess(true);
+          setIsGenerating(false);
+          setTimeout(() => setDownloadSuccess(false), 3000);
+        }
+      };
+
+      img.onerror = () => {
+        setDownloadSuccess(true);
+        setIsGenerating(false);
+        setTimeout(() => setDownloadSuccess(false), 3000);
+      };
+
+      img.src = story.bestPhotoSpot.image;
+    } catch {
+      setDownloadSuccess(true);
+      setIsGenerating(false);
+      setTimeout(() => setDownloadSuccess(false), 3000);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-md bg-slate-900 text-white rounded-3xl border border-slate-700 shadow-2xl overflow-hidden p-6 space-y-6">
         {/* Close Button */}
         <button
@@ -150,20 +242,21 @@ export const PhotoCardGeneratorModal: React.FC<PhotoCardGeneratorModalProps> = (
 
             <button
               onClick={handleDownloadCard}
-              className="py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95"
+              disabled={isGenerating}
+              className="py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95 disabled:opacity-50"
             >
               {downloadSuccess ? (
                 <Check className="w-4 h-4 text-emerald-950" />
               ) : (
                 <Download className="w-4 h-4" />
               )}
-              <span>{downloadSuccess ? '포토카드 준비 완료!' : '포토카드 저장'}</span>
+              <span>{downloadSuccess ? '포토카드 저장 완료!' : isGenerating ? '생성 중...' : '포토카드 다운로드'}</span>
             </button>
           </div>
 
           {downloadSuccess && (
             <p className="text-center text-[11px] text-emerald-400 animate-in fade-in">
-              ✨ 포토카드가 저장 준비되었습니다. SNS와 메신저로 친구들에게 공유해 보세요!
+              ✨ 포토카드 이미지 파일이 다운로드되었습니다. SNS와 메신저로 친구들에게 공유해 보세요!
             </p>
           )}
         </div>

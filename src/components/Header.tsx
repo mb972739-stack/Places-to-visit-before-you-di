@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, Compass, MapPin, Sparkles, Award, Plus, Menu, X } from 'lucide-react';
+import { Compass, Sparkles, Award, Plus, Menu, X, Luggage } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -66,6 +66,15 @@ export const Header: React.FC<HeaderProps> = ({
               숨은 명소
             </button>
             <button
+              onClick={() => handleNavClick('prep')}
+              className={`flex items-center gap-1.5 hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                activeTab === 'prep' ? 'text-slate-900 font-semibold border-b-2 border-slate-900 pb-1' : ''
+              }`}
+            >
+              <Luggage className="w-4 h-4 text-amber-600" />
+              <span>준비 가이드</span>
+            </button>
+            <button
               onClick={onOpenRoulette}
               className="flex items-center gap-1.5 hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer text-slate-600"
             >
@@ -77,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1.5 hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer text-slate-600"
             >
               <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span>AI 포토존 플래너</span>
+              <span>AI 플래너</span>
             </button>
             <button
               onClick={onOpenPassport}
@@ -130,6 +139,13 @@ export const Header: React.FC<HeaderProps> = ({
             className="block w-full text-left py-2 text-sm font-medium text-slate-800 hover:text-slate-900"
           >
             숨은 명소
+          </button>
+          <button
+            onClick={() => handleNavClick('prep')}
+            className="flex items-center gap-2 w-full text-left py-2 text-sm font-medium text-amber-800 hover:text-amber-900"
+          >
+            <Luggage className="w-4 h-4 text-amber-600" />
+            <span>여행 준비 가이드</span>
           </button>
           <button
             onClick={() => {
